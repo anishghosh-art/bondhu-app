@@ -6,6 +6,7 @@ import android.os.Debug
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Conversation
+import com.google.ai.edge.litertlm.ExperimentalApi
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
@@ -209,6 +210,8 @@ object ModelBench {
      * Token numbers. If the library reports real token counts we use them; otherwise we make
      * an ESTIMATE (about 3 characters per token) and say so in "tokensSource".
      */
+    // getBenchmarkInfo() is marked experimental by the library, so we must opt in explicitly.
+    @OptIn(ExperimentalApi::class)
     private fun addTokenStats(out: JSONObject, conv: Conversation, chars: Int, firstTokenMs: Long, totalMs: Long) {
         var tokens = -1
         var tokensPerSec = -1.0
