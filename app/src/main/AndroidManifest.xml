@@ -2,10 +2,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!--
-        No <uses-permission> on purpose:
-        - no INTERNET (the app never talks to a server)
-        - no RECORD_AUDIO (we only ask Android "is speech available?", we never listen)
+        Permissions (kept to the minimum):
+        - INTERNET: download models and check/download app updates. Nothing else is ever sent.
+        - ACCESS_NETWORK_STATE: to warn before using mobile data.
+        - REQUEST_INSTALL_PACKAGES: so the app can ask Android to install its own update
+          (Android always asks the user to confirm).
+        No RECORD_AUDIO: we only ask Android "is speech available?", we never listen.
     -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <!-- On Android 11+ an app can only "see" other apps if it says so here. -->
     <queries>
@@ -23,6 +29,16 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/Theme.BondhuBench">
+
+        <!-- Needed by the LiteRT-LM GPU backend (experimental). required=false = optional. -->
+        <uses-native-library android:name="libvndksupport.so" android:required="false" />
+        <uses-native-library android:name="libOpenCL.so" android:required="false" />
+
+        <!-- Android calls this after an install attempt (see InstallResultReceiver.kt). -->
+        <receiver
+            android:name=".InstallResultReceiver"
+            android:exported="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

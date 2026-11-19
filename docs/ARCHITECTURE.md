@@ -66,6 +66,6 @@ recording-consent rules to verify. Price per minute passed through to the user's
 |---|---|
 | Bondhu Bench: device profile, speech check, CPU bench, failure log, share report | DONE (tested on 1 phone) |
 | CI build + release of APK | DONE |
-| Model bench (speed/RAM/heat), in-app model download, in-app update, permanent signing key | PLAN (next) |
+| Model bench (speed/RAM/heat/replies), in-app model download, in-app update (PackageInstaller), permanent signing key in CI (0.2.0) | BUILT (not field-tested; needs the signing secrets set once) |
 | Auto problem reports -> GitHub issues | PLAN |
 | Everything else in this document | PLAN |

@@ -7,6 +7,16 @@ on:
 permissions:
   contents: write
 
+env:
+  # The Gradle build reads these. The three secrets are set in the GitHub repo settings
+  # (Settings > Secrets and variables > Actions). If a secret is missing the value is empty and
+  # the build falls back to the normal debug key, so the build never fails because of it.
+  BONDHU_KEYSTORE_PASSWORD: ${{ secrets.BONDHU_KEYSTORE_PASSWORD }}
+  BONDHU_KEY_ALIAS: ${{ secrets.BONDHU_KEY_ALIAS }}
+  BONDHU_KEY_PASSWORD: ${{ secrets.BONDHU_KEY_PASSWORD }}
+  # Note: versionCode in the APK = the CI run number. GitHub sets GITHUB_RUN_NUMBER by itself
+  # and app/build.gradle.kts reads it, so nothing to configure here.
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +33,22 @@ jobs:
         with:
           gradle-version: 8.7
 
+      # The permanent signing key lives only in GitHub Secrets (base64 text). Decode it to a temp file.
+      # Without it the APK is signed with a throw-away debug key (updates over a previous build will fail).
+      - name: Prepare signing key (if the secret exists)
+        env:
+          KEYSTORE_B64: ${{ secrets.BONDHU_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/bondhu.jks"
+            echo "BONDHU_KEYSTORE_PATH=$RUNNER_TEMP/bondhu.jks" >> "$GITHUB_ENV"
+            echo "Permanent signing key found: APK will be signed with it."
+          else
+            echo "No BONDHU_KEYSTORE_B64 secret: APK will use the default debug key."
+          fi
+
       # Use the project wrapper if it exists, otherwise fall back to the Gradle we just installed.
+      # Debug variant on purpose (keeps the output path the same); it is signed with the permanent key when available.
       - name: Build debug APK
         run: |
           if [ -f ./gradlew ] && [ -f gradle/wrapper/gradle-wrapper.jar ]; then
@@ -40,13 +65,42 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
-      # Keep the newest APK on a GitHub Release (does not use the artifact storage quota).
-      - name: Publish APK to release 'bench-latest'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      # Copy the APK, print its signing certificate fingerprint (public info, NOT a secret) so the
+      # owner can check that every build uses the same key, and write latest.json for the in-app updater.
+      - name: Prepare release files (APK, checksum, latest.json)
         run: |
           APK=$(ls app/build/outputs/apk/debug/*.apk | head -n 1)
           cp "$APK" bondhu-bench-debug.apk
+
+          SHA=$(sha256sum bondhu-bench-debug.apk | cut -d' ' -f1)
+          echo "APK sha256: $SHA"
+
+          # Signing certificate SHA-256 (apksigner comes with the Android SDK on the runner).
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1 || true)
+          echo "---- Signing certificate of this APK ----"
+          if [ -n "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --print-certs bondhu-bench-debug.apk | grep -i "certificate SHA-256" || true
+          elif command -v keytool >/dev/null 2>&1; then
+            keytool -printcert -jarfile bondhu-bench-debug.apk | grep -i "SHA256" || true
+          else
+            echo "apksigner and keytool not found; cannot print the certificate."
+          fi
+          echo "------------------------------------------"
+
+          jq -n \
+            --argjson versionCode "${{ github.run_number }}" \
+            --arg versionName "0.2.0" \
+            --arg apkName "bondhu-bench-debug.apk" \
+            --arg sha256 "$SHA" \
+            '{versionCode: $versionCode, versionName: $versionName, apkName: $apkName, sha256: $sha256}' > latest.json
+          cat latest.json
+
+      # Keep the newest APK on a GitHub Release (does not use the artifact storage quota).
+      # The app reads this release (tag bench-latest) to find updates.
+      - name: Publish APK and latest.json to release 'bench-latest'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
           gh release delete bench-latest --yes --cleanup-tag || true
-          gh release create bench-latest bondhu-bench-debug.apk --prerelease \
-            --title "Bondhu Bench (latest build)" --notes "Debug APK built from commit ${{ github.sha }}"
+          gh release create bench-latest bondhu-bench-debug.apk latest.json --prerelease \
+            --title "Bondhu Bench (latest build)" --notes "Debug APK built from commit ${{ github.sha }} (build ${{ github.run_number }})"

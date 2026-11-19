@@ -14,6 +14,8 @@ Format: decided (D), open (O), unverified (U). Update this file when something c
 - D9. Credits are prepaid (Razorpay/UPI). Provider-agnostic router; several providers.
 - D11. Licence: AGPL-3.0 for this app repo. Paid server code (credits, call answering) lives in a separate private repo.
 - D12. Runtime: LiteRT-LM Kotlin API (`com.google.ai.edge.litertlm:litertlm-android`, documented as stable for Android). Models are `.litertlm` files from `litert-community` on Hugging Face. Verified 2026-11-19 from official docs and the HF API.
+- D13. LiteRT-LM is pinned to 0.16.1 (exists on Google Maven). Reasons: the Qwen3 model card reports that 0.18.0+ breaks the thinking model file (0.17.1 worked), and 0.17+ needs a Kotlin 2.4 compiler. 0.16.1 needs Kotlin 2.2+, so the project uses Kotlin 2.2.21. Re-check before upgrading.
+- D14. Updates: CI publishes `bondhu-bench-debug.apk` + `latest.json` to the pre-release `bench-latest`; the app compares versionCode (= CI run number), verifies SHA-256 and installs via PackageInstaller. All builds are signed with one permanent key from GitHub Secrets.
 - D10. Android build verification happens in CI only (no SDK in the Claude workspace).
 
 ## Open

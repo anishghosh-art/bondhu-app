@@ -39,9 +39,11 @@ The project owner (a beginner in coding/ML) writes casual Bengali. Private worki
 - Commits end with the attribution lines the session asks for. Push only when the user has asked for it.
 
 ## Current status (2026-11-19)
+- Permanent signing key: the owner must create it once and add the 4 GitHub Secrets (names in README, section Signing). Never commit it.
 - Bondhu Bench 0.1.0 built by CI and tested once on one mid-range phone (Android 16, MediaTek, ~7.6 GB RAM,
   only ~2.4 GB free at test time). Report: Google TTS has bn-IN/hi-IN/en-IN voices; on-device STT reported available
   (Bengali language pack NOT yet verified).
+- Version 0.2.0 (model download, model bench, in-app update, signing in CI) is BUILT in code but not yet compiled/field-tested at the time of writing; check the CI run and the status table in `docs/ARCHITECTURE.md`.
 - Not built: everything else (see `docs/ARCHITECTURE.md`, status table).
 
 ## Open verification items (do these before relying on them)

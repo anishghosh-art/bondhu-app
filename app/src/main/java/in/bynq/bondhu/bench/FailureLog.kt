@@ -15,7 +15,7 @@ import java.io.File
  *    message, and the phone model + Android version. Nothing else.
  *  - NEVER store user content: no messages, contacts, audio, file names, names or numbers.
  *  - LOCAL ONLY. The file lives in app-private storage and is never uploaded
- *    (this app does not even have the INTERNET permission).
+ *    (the app only sends the requests for model downloads and update checks, never this file).
  *  - SHARED ONLY when the user taps "Share report". Then the log is added to the report text,
  *    and the user can read it before sending it to anyone.
  *
