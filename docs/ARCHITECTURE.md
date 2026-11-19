@@ -46,11 +46,11 @@ a cloud voice-AI provider answers with the user's context and sends a summary. M
 recording-consent rules to verify. Price per minute passed through to the user's credits.
 
 ## 7. Updates, models, and feedback loop (next build)
-- **In-app update**: app checks the latest release of a PUBLIC releases repo (`bondhu-releases`, APKs only; source stays private),
+- **In-app update**: app checks the GitHub Release `bench-latest` of this (now public) repo via `GET /repos/anishghosh-art/bondhu-app/releases/tags/bench-latest` (the `/releases/latest` endpoint skips pre-releases and returns 404),
   downloads, installs via PackageInstaller. Android always asks the user to confirm once; no silent install for sideloaded apps.
   Requires a **permanent signing key** (CI debug keys differ per run and break updates) and an increasing versionCode (use the CI run number).
-- **In-app model download** (needs INTERNET permission): resumable, shows size, checks free space, verifies hash. Ungated models (e.g. Qwen) download directly;
-  Gemma needs the user to accept Google's license once.
+- **In-app model download** (needs INTERNET permission): resumable, shows size, checks free space, verifies hash. Verified 2026-11-19 on Hugging Face: `litert-community/Qwen3-0.6B` and `litert-community/gemma-4-E2B-it-litert-lm` are Apache-2.0 and NOT gated (direct download);
+  `litert-community/Gemma3-1B-IT` is gated (Gemma licence + HF token), so avoid it for in-app download.
 - **Automatic problem reports** (opt-in toggle at first run): every 1-2 hours the app batches new failure events and sends them to a free
   server endpoint that opens/updates GitHub issues (deduplicated; the app never holds a GitHub token). When a fix ships, the issue is closed.
   Events only, never content.
