@@ -1,0 +1,52 @@
+name: Build Bondhu Bench APK
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # Installs Gradle 8.7 and caches downloads.
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.7
+
+      # Use the project wrapper if it exists, otherwise fall back to the Gradle we just installed.
+      - name: Build debug APK
+        run: |
+          if [ -f ./gradlew ] && [ -f gradle/wrapper/gradle-wrapper.jar ]; then
+            chmod +x ./gradlew
+            ./gradlew :app:assembleDebug --stacktrace
+          else
+            gradle :app:assembleDebug --stacktrace
+          fi
+
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true  # artifact storage quota can run out; the release below is the reliable copy
+        with:
+          name: bondhu-bench-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      # Keep the newest APK on a GitHub Release (does not use the artifact storage quota).
+      - name: Publish APK to release 'bench-latest'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK=$(ls app/build/outputs/apk/debug/*.apk | head -n 1)
+          cp "$APK" bondhu-bench-debug.apk
+          gh release delete bench-latest --yes --cleanup-tag || true
+          gh release create bench-latest bondhu-bench-debug.apk --prerelease \
+            --title "Bondhu Bench (latest build)" --notes "Debug APK built from commit ${{ github.sha }}"

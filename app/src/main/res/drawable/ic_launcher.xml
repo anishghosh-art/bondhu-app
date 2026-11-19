@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple vector icon: a teal circle. Replace with a real icon later. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <path
+        android:fillColor="#00796B"
+        android:pathData="M48,8a40,40 0 1,0 0,80a40,40 0 1,0 0,-80z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,34h22a12,12 0 0,1 0,24h-22z M30,58h26a12,12 0 0,1 0,24h-26z" />
+</vector>
